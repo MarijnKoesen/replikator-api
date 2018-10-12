@@ -85,13 +85,14 @@ func startApiServer() {
 	r.HandleFunc("/replikator/{name}", getReplikator).Methods("GET")
 	r.HandleFunc("/replikator/{name}", deleteReplikator).Methods("DELETE")
 
+	log.Printf("Listening on '%s', using replikator executable '%s'\n", *listenAddress, *replikatorPath)
+
 	err := http.ListenAndServe(*listenAddress, r)
 	if err != nil {
 		log.Printf("ERROR: %s", err.Error())
 		os.Exit(1)
 	}
 
-	log.Printf("Listening on '%s', using replikator executable '%s'\n", *listenAddress, *replikatorPath)
 }
 
 func main() {
