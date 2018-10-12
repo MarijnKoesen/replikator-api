@@ -1,5 +1,8 @@
 # Replikator API
 
+[![Go Report Card](https://goreportcard.com/badge/github.com/marijnkoesen/replikator-api)](https://goreportcard.com/report/github.com/marijnkoesen/replikator-api)
+[![Build Status](https://travis-ci.org/MarijnKoesen/replikator-api.svg?branch=master)](https://travis-ci.org/MarijnKoesen/replikator-api)
+
 This project adds a REST API around the Replikator that makes it possible to manage the replikated databases using a
 REST api.
 
