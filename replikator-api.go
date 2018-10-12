@@ -53,6 +53,8 @@ func createReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
+	log.Printf("Creating replikator: %s", name)
+
 	output := execute("-o json --create " + name)
 
 	fmt.Fprintf(w, output)
@@ -70,6 +72,8 @@ func getReplikator(w http.ResponseWriter, r *http.Request) {
 func deleteReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
+
+	log.Printf("Deleting replikator: %s", name)
 
 	output := execute("-o json --delete " + name)
 
@@ -92,7 +96,6 @@ func startApiServer() {
 		log.Printf("ERROR: %s", err.Error())
 		os.Exit(1)
 	}
-
 }
 
 func main() {
