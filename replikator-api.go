@@ -54,6 +54,7 @@ func createReplikator(w http.ResponseWriter, r *http.Request) {
 	name := vars["name"]
 
 	log.Printf("Creating replikator: %s", name)
+	fmt.Printf("Creating2 replikator: %s", name)
 
 	output := execute("-o json --create " + name)
 
@@ -74,6 +75,7 @@ func deleteReplikator(w http.ResponseWriter, r *http.Request) {
 	name := vars["name"]
 
 	log.Printf("Deleting replikator: %s", name)
+	fmt.Printf("Deleting2 replikator: %s", name)
 
 	output := execute("-o json --delete " + name)
 
