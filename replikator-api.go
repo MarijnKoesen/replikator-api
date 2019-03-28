@@ -46,7 +46,7 @@ func execute(parameters string) string {
 func listReplikators(w http.ResponseWriter, r *http.Request) {
 	output := execute("-l -o json")
 
-	fmt.Fprintf(w, output)
+	fmt.Fprint(w, output)
 }
 
 func createReplikator(w http.ResponseWriter, r *http.Request) {
@@ -57,7 +57,7 @@ func createReplikator(w http.ResponseWriter, r *http.Request) {
 
 	output := execute("-o json --create " + name)
 
-	fmt.Fprintf(w, output)
+	fmt.Fprint(w, output)
 }
 
 func getReplikator(w http.ResponseWriter, r *http.Request) {
@@ -66,7 +66,7 @@ func getReplikator(w http.ResponseWriter, r *http.Request) {
 
 	output := execute("-o json --get-status " + name)
 
-	fmt.Fprintf(w, output)
+	fmt.Fprint(w, output)
 }
 
 func deleteReplikator(w http.ResponseWriter, r *http.Request) {
@@ -77,7 +77,7 @@ func deleteReplikator(w http.ResponseWriter, r *http.Request) {
 
 	output := execute("-o json --delete " + name)
 
-	fmt.Fprintf(w, output)
+	fmt.Fprint(w, output)
 }
 
 func startApiServer() {
