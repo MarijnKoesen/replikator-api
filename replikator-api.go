@@ -60,6 +60,28 @@ func createReplikator(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, output)
 }
 
+func stopReplikator(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["name"]
+
+	log.Printf("Stopping replikator: %s", name)
+
+	output := execute("-o json --stop " + name)
+
+	fmt.Fprint(w, output)
+}
+
+func startReplikator(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["name"]
+
+	log.Printf("Starting replikator: %s", name)
+
+	output := execute("-o json --run " + name)
+
+	fmt.Fprint(w, output)
+}
+
 func getReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
@@ -86,6 +108,8 @@ func startApiServer() {
 	r.HandleFunc("/replikators", listReplikators).Methods("GET")
 
 	r.HandleFunc("/replikator/{name}", createReplikator).Methods("PUT")
+	r.HandleFunc("/replikator/{name}/stop", stopReplikator).Methods("PUT")
+	r.HandleFunc("/replikator/{name}/start", startReplikator).Methods("PUT")
 	r.HandleFunc("/replikator/{name}", getReplikator).Methods("GET")
 	r.HandleFunc("/replikator/{name}", deleteReplikator).Methods("DELETE")
 
