@@ -60,17 +60,6 @@ func createReplikator(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, output)
 }
 
-func refreshReplikator(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	name := vars["name"]
-
-	log.Printf("Refreshing replikator: %s", name)
-
-	output := execute("-o json --refresh " + name)
-
-	fmt.Fprint(w, output)
-}
-
 func getReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
@@ -97,7 +86,6 @@ func startApiServer() {
 	r.HandleFunc("/replikators", listReplikators).Methods("GET")
 
 	r.HandleFunc("/replikator/{name}", createReplikator).Methods("PUT")
-	r.HandleFunc("/replikator/{name}/refresh", refreshReplikator).Methods("PUT")
 	r.HandleFunc("/replikator/{name}", getReplikator).Methods("GET")
 	r.HandleFunc("/replikator/{name}", deleteReplikator).Methods("DELETE")
 
