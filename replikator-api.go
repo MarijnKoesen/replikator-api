@@ -57,7 +57,7 @@ func createReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	log.Printf("Creating replikator: %s", name)
+	log.Printf("Creating replikator [%s]", name)
 
 	output := executeWithFormat("--output json --create %s", name)
 
@@ -68,7 +68,7 @@ func stopReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	log.Printf("Stopping replikator: %s", name)
+	log.Printf("Stopping replikator [%s]", name)
 
 	output := executeWithFormat("--output json --stop %s", name)
 
@@ -79,7 +79,7 @@ func startReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	log.Printf("Starting replikator: %s", name)
+	log.Printf("Starting replikator [%s]", name)
 
 	output := executeWithFormat("--output json --run %s", name)
 
@@ -99,7 +99,7 @@ func deleteReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	log.Printf("Deleting replikator: %s", name)
+	log.Printf("Deleting replikator [%s]", name)
 
 	output := executeWithFormat("--output json --delete %s", name)
 
@@ -117,7 +117,7 @@ func startApiServer() {
 	r.HandleFunc("/replikator/{name}", getReplikator).Methods("GET")
 	r.HandleFunc("/replikator/{name}", deleteReplikator).Methods("DELETE")
 
-	log.Printf("Listening on '%s', using replikator executable '%s'\n", *listenAddress, *replikatorPath)
+	log.Printf("Listening on [%s], using replikator executable [%s]\n", *listenAddress, *replikatorPath)
 
 	err := http.ListenAndServe(*listenAddress, r)
 	if err != nil {
@@ -153,7 +153,7 @@ func setupSignalHandler() {
 	go func() {
 		sig := <-stopSignals
 
-		log.Printf("Shutting down, signal '%s' received...", sig)
+		log.Printf("Shutting down, signal [%s] received...", sig)
 		os.Exit(1)
 	}()
 }
