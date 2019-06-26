@@ -64,6 +64,18 @@ func createReplikator(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, output)
 }
 
+func createReplikatorFromReplica(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	name := vars["name"]
+	fromReplica := vars["fromReplica"]
+
+	log.Printf("Creating replikator [%s] from replica [%s]", name, fromReplica)
+
+	output := executeWithFormat("--output json --create %s --from-replica %s", name, fromReplica)
+
+	fmt.Fprint(w, output)
+}
+
 func stopReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
@@ -111,6 +123,7 @@ func startApiServer() {
 
 	r.HandleFunc("/replikators", listReplikators).Methods("GET")
 
+	r.HandleFunc("/replikator/{name}", createReplikatorFromReplica).Methods("PUT").Queries("fromReplica", "{fromReplica}")
 	r.HandleFunc("/replikator/{name}", createReplikator).Methods("PUT")
 	r.HandleFunc("/replikator/{name}/stop", stopReplikator).Methods("PUT")
 	r.HandleFunc("/replikator/{name}/start", startReplikator).Methods("PUT")
