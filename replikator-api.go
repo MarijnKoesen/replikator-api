@@ -44,7 +44,7 @@ func execute(parameters string) string {
 }
 
 func listReplikators(w http.ResponseWriter, r *http.Request) {
-	output := execute("-l -o json")
+	output := execute("--output json --list")
 
 	fmt.Fprint(w, output)
 }
@@ -55,7 +55,7 @@ func createReplikator(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Creating replikator: %s", name)
 
-	output := execute("-o json --create " + name)
+	output := execute("--output json --create " + name)
 
 	fmt.Fprint(w, output)
 }
@@ -66,7 +66,7 @@ func stopReplikator(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Stopping replikator: %s", name)
 
-	output := execute("-o json --stop " + name)
+	output := execute("--output json --stop " + name)
 
 	fmt.Fprint(w, output)
 }
@@ -77,7 +77,7 @@ func startReplikator(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Starting replikator: %s", name)
 
-	output := execute("-o json --run " + name)
+	output := execute("--output json --run " + name)
 
 	fmt.Fprint(w, output)
 }
@@ -86,7 +86,7 @@ func getReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	output := execute("-o json --get-status " + name)
+	output := execute("--output json --get-status " + name)
 
 	fmt.Fprint(w, output)
 }
@@ -97,7 +97,7 @@ func deleteReplikator(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Deleting replikator: %s", name)
 
-	output := execute("-o json --delete " + name)
+	output := execute("--output json --delete " + name)
 
 	fmt.Fprint(w, output)
 }
