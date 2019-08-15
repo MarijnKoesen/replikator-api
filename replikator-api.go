@@ -149,7 +149,7 @@ func main() {
 	goopt.Description = func() string {
 		return "Restfull Replikator API server that allows you to list, create, delete fetch replikators"
 	}
-	goopt.Version = "0.1.0"
+	goopt.Version = "0.2.0"
 	goopt.Summary = "Restfull Replikator API server"
 	goopt.Parse(nil)
 
