@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/droundy/goopt"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"net/http"
 	"os"
@@ -118,21 +119,26 @@ func deleteReplikator(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, output)
 }
 
+func wrapHandler(handler http.HandlerFunc) http.Handler {
+	return promhttp.InstrumentHandlerCounter(httpRequestsTotal, http.HandlerFunc(handler))
+}
+
 func startApiServer() {
-	r := mux.NewRouter()
+	registerMetrics()
 
-	r.HandleFunc("/replikators", listReplikators).Methods("GET")
-
-	r.HandleFunc("/replikator/{name}", createReplikatorFromReplica).Methods("PUT").Queries("fromReplica", "{fromReplica}")
-	r.HandleFunc("/replikator/{name}", createReplikator).Methods("PUT")
-	r.HandleFunc("/replikator/{name}/stop", stopReplikator).Methods("PUT")
-	r.HandleFunc("/replikator/{name}/start", startReplikator).Methods("PUT")
-	r.HandleFunc("/replikator/{name}", getReplikator).Methods("GET")
-	r.HandleFunc("/replikator/{name}", deleteReplikator).Methods("DELETE")
+	router := mux.NewRouter()
+	router.Handle("/replikators", wrapHandler(listReplikators)).Methods("GET")
+	router.Handle("/replikator/{name}", wrapHandler(createReplikatorFromReplica)).Methods("PUT").Queries("fromReplica", "{fromReplica}")
+	router.Handle("/replikator/{name}", wrapHandler(createReplikator)).Methods("PUT")
+	router.Handle("/replikator/{name}/stop", wrapHandler(stopReplikator)).Methods("PUT")
+	router.Handle("/replikator/{name}/start", wrapHandler(startReplikator)).Methods("PUT")
+	router.Handle("/replikator/{name}", wrapHandler(getReplikator)).Methods("GET")
+	router.Handle("/replikator/{name}", wrapHandler(deleteReplikator)).Methods("DELETE")
+	router.Handle("/metrics", getMetrics()).Methods("GET")
 
 	log.Printf("Listening on [%s], using replikator executable [%s]\n", *listenAddress, *replikatorPath)
 
-	err := http.ListenAndServe(*listenAddress, r)
+	err := http.ListenAndServe(*listenAddress, router)
 	if err != nil {
 		log.Printf("ERROR: %s", err.Error())
 		os.Exit(1)
@@ -143,7 +149,7 @@ func main() {
 	goopt.Description = func() string {
 		return "Restfull Replikator API server that allows you to list, create, delete fetch replikators"
 	}
-	goopt.Version = "0.1.0"
+	goopt.Version = "0.2.0"
 	goopt.Summary = "Restfull Replikator API server"
 	goopt.Parse(nil)
 
