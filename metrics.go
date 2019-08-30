@@ -101,6 +101,7 @@ func getMetrics() http.Handler {
 		if err != nil {
 			replicationLag = -1
 		}
+		replikatorReplicationLag.Reset()
 		replikatorReplicationLag.With(prometheus.Labels{"state": strings.ToLower(data.DatabaseGlobalState.ReplicationState)}).Set(replicationLag)
 
 		diskCapacity, _ := strconv.ParseFloat(data.DatabaseGlobalState.DiskCapacity, 64)
