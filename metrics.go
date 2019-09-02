@@ -22,14 +22,29 @@ var (
 		Help: "Replication lag from master server",
 	}, []string{"state"})
 
+	replikatorReplicationDiskUsage = prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "replikator_replication_disk_usage",
+		Help: "Disk usage by the replication process",
+	}, []string{"state"})
+
 	replikatorDiskCapacity = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "replikator_disk_capacity",
 		Help: "Disk capacity",
 	})
 
+	replikatorDiskFree = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "replikator_disk_free",
+		Help: "Free disk",
+	})
+
 	replikatorMemoryCapacity = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "replikator_memory_capacity",
 		Help: "Memory capacity",
+	})
+
+	replikatorMemoryFree = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "replikator_memory_free",
+		Help: "Free memory",
 	})
 
 	// Replicas metrics
@@ -57,8 +72,11 @@ type databaseGlobalState struct {
 	DatabaseInstanceState []databaseInstanceState `json:"DatabaseInstanceState"`
 	ReplicationState      string                  `json:"eReplicationState"`
 	ReplicationLag        string                  `json:"iReplicationLag"`
+	ReplicationDiskUsage  string                  `json:"sAllocatedForDb"`
 	DiskCapacity          string                  `json:"sTotalStorageCapacity"`
+	DiskFree              string                  `json:"sFree"`
 	MemoryCapacity        string                  `json:"sTotalMemCapacity"`
+	MemoryFree            string                  `json:"sFreeMem"`
 }
 
 type databaseInstanceState struct {
@@ -80,8 +98,11 @@ func registerMetrics() {
 
 		// Replikator/Replication metrics
 		replikatorReplicationLag,
+		replikatorReplicationDiskUsage,
 		replikatorDiskCapacity,
+		replikatorDiskFree,
 		replikatorMemoryCapacity,
+		replikatorMemoryFree,
 
 		// Replicas metrics
 		replikatorReplicaDiskUsage,
@@ -97,18 +118,35 @@ func getMetrics() http.Handler {
 		output := execute("--output json --list")
 		json.Unmarshal([]byte(output), &data)
 
+		labels := prometheus.Labels{
+			"state": strings.ToLower(data.DatabaseGlobalState.ReplicationState),
+		}
+
 		replicationLag, err := strconv.ParseFloat(data.DatabaseGlobalState.ReplicationLag, 64)
 		if err != nil {
 			replicationLag = -1
 		}
 		replikatorReplicationLag.Reset()
-		replikatorReplicationLag.With(prometheus.Labels{"state": strings.ToLower(data.DatabaseGlobalState.ReplicationState)}).Set(replicationLag)
+		replikatorReplicationLag.With(labels).Set(replicationLag)
+
+		replicationDiskUsage, err := strconv.ParseFloat(data.DatabaseGlobalState.ReplicationDiskUsage, 64)
+		if err != nil {
+			replicationDiskUsage = 0
+		}
+		replikatorReplicationLag.Reset()
+		replikatorReplicationLag.With(labels).Set(replicationDiskUsage)
 
 		diskCapacity, _ := strconv.ParseFloat(data.DatabaseGlobalState.DiskCapacity, 64)
 		replikatorDiskCapacity.Set(diskCapacity)
 
+		diskFree, _ := strconv.ParseFloat(data.DatabaseGlobalState.DiskFree, 64)
+		replikatorDiskFree.Set(diskFree)
+
 		memoryCapacity, _ := strconv.ParseFloat(data.DatabaseGlobalState.MemoryCapacity, 64)
 		replikatorMemoryCapacity.Set(memoryCapacity)
+
+		memoryFree, _ := strconv.ParseFloat(data.DatabaseGlobalState.MemoryFree, 64)
+		replikatorMemoryFree.Set(memoryFree)
 
 		replikatorReplicaDiskUsage.Reset()
 		replikatorReplicaMemoryAllocated.Reset()
