@@ -61,6 +61,8 @@ User=replikator
 Group=replikator
 LimitNOFILE=1024
 
+KillMode=process
+
 Restart=on-failure
 RestartSec=10
 
