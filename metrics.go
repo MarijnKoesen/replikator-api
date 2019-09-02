@@ -133,8 +133,8 @@ func getMetrics() http.Handler {
 		if err != nil {
 			replicationDiskUsage = 0
 		}
-		replikatorReplicationLag.Reset()
-		replikatorReplicationLag.With(labels).Set(replicationDiskUsage)
+		replikatorReplicationDiskUsage.Reset()
+		replikatorReplicationDiskUsage.With(labels).Set(replicationDiskUsage)
 
 		diskCapacity, _ := strconv.ParseFloat(data.DatabaseGlobalState.DiskCapacity, 64)
 		replikatorDiskCapacity.Set(diskCapacity)
