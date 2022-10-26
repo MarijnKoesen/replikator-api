@@ -6,6 +6,15 @@
 This project adds a REST API around the Replikator that makes it possible to manage the replikated databases using a
 REST api.
 
+```
+Usage of replikator-api:
+	Restfull Replikator API server
+Options:
+  -l, --listen=:8080                    listen address
+  -r, --replikator=sudo replikator-ctl  Path to replikator-ctl
+  -h, --help                            Show usage message
+  --version                             Show version
+```
 
 ## Run locally
 
@@ -15,8 +24,37 @@ Usage:
 $ go get github.com/MarijnKoesen/replikator-api
 $ go build github.com/MarijnKoesen/replikator-api
 $ ./replikator-api
+
+# when you don't have replikator-ctl available
+$ ./replikator-api -r echo
 ```
 
+From source:
+
+```bash
+$ git clone git@github.com:MarijnKoesen/replikator-api.git
+$ go run . -r echo
+```
+
+```bash
+> curl -XPUT localhost:8080/replikator/foo -vvv
+*   Trying 127.0.0.1:8080...
+* Connected to localhost (127.0.0.1) port 8080 (#0)
+> PUT /replikator/foo HTTP/1.1
+> Host: localhost:8080
+> User-Agent: curl/7.79.1
+> Accept: */*
+>
+* Mark bundle as not supporting multiuse
+< HTTP/1.1 200 OK
+< Access-Control-Allow-Origin: *
+< Content-Type: application/json
+< Date: Wed, 26 Oct 2022 11:22:50 GMT
+< Content-Length: 27
+<
+--output json --create foo
+* Connection #0 to host localhost left intact
+```
 
 ## Installation on server
 
