@@ -10,10 +10,11 @@ REST api.
 Usage of replikator-api:
 	Restfull Replikator API server
 Options:
-  -l, --listen=:8080                    listen address
-  -r, --replikator=sudo replikator-ctl  Path to replikator-ctl
-  -h, --help                            Show usage message
-  --version                             Show version
+  -l, --listen=:8080                      listen address
+  -r, --replikator="sudo replikator-ctl"  Path to replikator-ctl
+  -s, --secret=                           CORS secret, minimal length 20 chars
+  -h, --help                              Show usage message
+  --version                               Show version
 ```
 
 ## Run locally
