@@ -19,7 +19,7 @@ import (
 var mutex sync.Mutex
 
 var listenAddress = goopt.String([]string{"-l", "--listen"}, ":8080", "listen address")
-var replikatorPath = goopt.String([]string{"-r", "--replikator"}, "\"sudo replikator-ctl\"", "Path to replikator-ctl")
+var replikatorPath = goopt.String([]string{"-r", "--replikator"}, "sudo replikator-ctl", "Path to replikator-ctl")
 var corsSecret = goopt.String([]string{"-s", "--secret"}, "", "CORS secret, minimal length 20 chars")
 
 func execute(parameters string) string {
