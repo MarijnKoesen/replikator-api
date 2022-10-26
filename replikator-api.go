@@ -19,7 +19,8 @@ import (
 var mutex sync.Mutex
 
 var listenAddress = goopt.String([]string{"-l", "--listen"}, ":8080", "listen address")
-var replikatorPath = goopt.String([]string{"-r", "--replikator"}, "sudo replikator-ctl", "Path to replikator-ctl")
+var replikatorPath = goopt.String([]string{"-r", "--replikator"}, "\"sudo replikator-ctl\"", "Path to replikator-ctl")
+var corsSecret = goopt.String([]string{"-s", "--secret"}, "", "CORS secret, minimal length 20 chars")
 
 func execute(parameters string) string {
 	args := strings.Fields(*replikatorPath + " " + parameters)
@@ -58,8 +59,6 @@ func createReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	log.Printf("Creating replikator [%s]", name)
-
 	output := executeWithFormat("--output json --create %s", name)
 
 	fmt.Fprint(w, output)
@@ -70,8 +69,6 @@ func createReplikatorFromReplica(w http.ResponseWriter, r *http.Request) {
 	name := vars["name"]
 	fromReplica := vars["fromReplica"]
 
-	log.Printf("Creating replikator [%s] from replica [%s]", name, fromReplica)
-
 	output := executeWithFormat("--output json --create %s --from-replica %s", name, fromReplica)
 
 	fmt.Fprint(w, output)
@@ -81,8 +78,6 @@ func stopReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	log.Printf("Stopping replikator [%s]", name)
-
 	output := executeWithFormat("--output json --stop %s", name)
 
 	fmt.Fprint(w, output)
@@ -91,8 +86,6 @@ func stopReplikator(w http.ResponseWriter, r *http.Request) {
 func startReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
-
-	log.Printf("Starting replikator [%s]", name)
 
 	output := executeWithFormat("--output json --run %s", name)
 
@@ -111,8 +104,6 @@ func getReplikator(w http.ResponseWriter, r *http.Request) {
 func deleteReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
-
-	log.Printf("Deleting replikator [%s]", name)
 
 	output := executeWithFormat("--output json --delete %s", name)
 
@@ -136,6 +127,10 @@ func startApiServer() {
 	router.Handle("/replikator/{name}", wrapHandler(deleteReplikator)).Methods("DELETE")
 	router.Handle("/metrics", getMetrics()).Methods("GET")
 
+	router.Use(loggingMiddleware)
+	router.Use(jsonHeaderMiddleware)
+	router.Use(corsHeaderMiddleware)
+
 	log.Printf("Listening on [%s], using replikator executable [%s]\n", *listenAddress, *replikatorPath)
 
 	err := http.ListenAndServe(*listenAddress, router)
@@ -143,6 +138,32 @@ func startApiServer() {
 		log.Printf("ERROR: %s", err.Error())
 		os.Exit(1)
 	}
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("[%s] %s %s", r.Method, r.RequestURI, r.RemoteAddr)
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func jsonHeaderMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		
+		next.ServeHTTP(w, r)
+	})
+}
+
+func corsHeaderMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if len(*corsSecret) > 20 && *corsSecret == r.Header.Get("X-CORS-SECRET") {
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func main() {
