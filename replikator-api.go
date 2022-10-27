@@ -19,8 +19,7 @@ import (
 var mutex sync.Mutex
 
 var listenAddress = goopt.String([]string{"-l", "--listen"}, ":8080", "listen address")
-var replikatorPath = goopt.String([]string{"-r", "--replikator"}, "\"sudo replikator-ctl\"", "Path to replikator-ctl")
-var corsSecret = goopt.String([]string{"-s", "--secret"}, "", "CORS secret, minimal length 20 chars")
+var replikatorPath = goopt.String([]string{"-r", "--replikator"}, "sudo replikator-ctl", "Path to replikator-ctl")
 
 func execute(parameters string) string {
 	args := strings.Fields(*replikatorPath + " " + parameters)
@@ -118,18 +117,17 @@ func startApiServer() {
 	registerMetrics()
 
 	router := mux.NewRouter()
-	router.Handle("/replikators", wrapHandler(listReplikators)).Methods("GET")
-	router.Handle("/replikator/{name}", wrapHandler(createReplikatorFromReplica)).Methods("PUT").Queries("fromReplica", "{fromReplica}")
-	router.Handle("/replikator/{name}", wrapHandler(createReplikator)).Methods("PUT")
-	router.Handle("/replikator/{name}/stop", wrapHandler(stopReplikator)).Methods("PUT")
-	router.Handle("/replikator/{name}/start", wrapHandler(startReplikator)).Methods("PUT")
-	router.Handle("/replikator/{name}", wrapHandler(getReplikator)).Methods("GET")
-	router.Handle("/replikator/{name}", wrapHandler(deleteReplikator)).Methods("DELETE")
-	router.Handle("/metrics", getMetrics()).Methods("GET")
+	router.Handle("/replikators", wrapHandler(listReplikators)).Methods(http.MethodGet)
+	router.Handle("/replikator/{name}", wrapHandler(createReplikatorFromReplica)).Methods(http.MethodPut).Queries("fromReplica", "{fromReplica}")
+	router.Handle("/replikator/{name}", wrapHandler(createReplikator)).Methods(http.MethodPut)
+	router.Handle("/replikator/{name}/stop", wrapHandler(stopReplikator)).Methods(http.MethodPut)
+	router.Handle("/replikator/{name}/start", wrapHandler(startReplikator)).Methods(http.MethodPut)
+	router.Handle("/replikator/{name}", wrapHandler(getReplikator)).Methods(http.MethodGet)
+	router.Handle("/replikator/{name}", wrapHandler(deleteReplikator)).Methods(http.MethodDelete)
+	router.Handle("/metrics", getMetrics()).Methods(http.MethodGet)
 
 	router.Use(loggingMiddleware)
 	router.Use(jsonHeaderMiddleware)
-	router.Use(corsHeaderMiddleware)
 
 	log.Printf("Listening on [%s], using replikator executable [%s]\n", *listenAddress, *replikatorPath)
 
@@ -151,16 +149,6 @@ func loggingMiddleware(next http.Handler) http.Handler {
 func jsonHeaderMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		
-		next.ServeHTTP(w, r)
-	})
-}
-
-func corsHeaderMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if len(*corsSecret) > 20 && *corsSecret == r.Header.Get("X-CORS-SECRET") {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
-		}
 
 		next.ServeHTTP(w, r)
 	})
