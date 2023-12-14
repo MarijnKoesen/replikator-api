@@ -122,7 +122,7 @@ func getMetrics() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var data replikatorData
 
-		output := execute("--output json --list")
+		output := execute("", "--output json --list")
 		json.Unmarshal([]byte(output), &data)
 
 		labels := prometheus.Labels{
