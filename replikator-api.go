@@ -19,12 +19,24 @@ import (
 	"time"
 )
 
-var mutex sync.Mutex
+type KeyedMutex struct {
+	mutexes sync.Map // Zero value is empty and ready for use
+}
+
+var keyedMutex = KeyedMutex{}
+
+func (m *KeyedMutex) Lock(key string) func() {
+	value, _ := m.mutexes.LoadOrStore(key, &sync.Mutex{})
+	mtx := value.(*sync.Mutex)
+	mtx.Lock()
+
+	return func() { mtx.Unlock() }
+}
 
 var listenAddress = goopt.String([]string{"-l", "--listen"}, ":8080", "listen address")
 var replikatorPath = goopt.String([]string{"-r", "--replikator"}, "sudo replikator-ctl", "Path to replikator-ctl")
 
-func execute(parameters string) string {
+func execute(lockKey string, parameters string) string {
 	args := strings.Fields(*replikatorPath + " " + parameters)
 	cmd := exec.Command(args[0], args[1:]...)
 
@@ -34,11 +46,12 @@ func execute(parameters string) string {
 	var stdErr bytes.Buffer
 	cmd.Stderr = &stdErr
 
-	// replikator-ctl can only be run in a single thread, so use a mutex to make sure we never
-	// execute the script from multiple threads when we get multiple api connections
-	mutex.Lock()
+	if lockKey != "" {
+		// We don't want to execute stop, start, read, or delete at the same time for the same replikator
+		unlock := keyedMutex.Lock(lockKey)
+		defer unlock()
+	}
 	err := cmd.Run()
-	mutex.Unlock()
 
 	if err != nil {
 		return stdErr.String()
@@ -47,12 +60,12 @@ func execute(parameters string) string {
 	return stdOut.String()
 }
 
-func executeWithFormat(format string, arguments ...interface{}) string {
-	return execute(fmt.Sprintf(format, arguments...))
+func executeWithFormat(lockKey string, format string, arguments ...interface{}) string {
+	return execute(lockKey, fmt.Sprintf(format, arguments...))
 }
 
 func listReplikators(w http.ResponseWriter, r *http.Request) {
-	output := execute("--output json --list")
+	output := execute("", "--output json --list")
 
 	fmt.Fprint(w, output)
 }
@@ -61,7 +74,7 @@ func createReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	output := executeWithFormat("--output json --create %s", name)
+	output := executeWithFormat(name, "--output json --create %s", name)
 
 	fmt.Fprint(w, output)
 }
@@ -71,7 +84,7 @@ func createReplikatorFromReplica(w http.ResponseWriter, r *http.Request) {
 	name := vars["name"]
 	fromReplica := vars["fromReplica"]
 
-	output := executeWithFormat("--output json --create %s --from-replica %s", name, fromReplica)
+	output := executeWithFormat(name, "--output json --create %s --from-replica %s", name, fromReplica)
 
 	fmt.Fprint(w, output)
 }
@@ -80,7 +93,7 @@ func stopReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	output := executeWithFormat("--output json --stop %s", name)
+	output := executeWithFormat(name, "--output json --stop %s", name)
 
 	fmt.Fprint(w, output)
 }
@@ -89,7 +102,7 @@ func startReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	output := executeWithFormat("--output json --run %s", name)
+	output := executeWithFormat(name, "--output json --run %s", name)
 
 	fmt.Fprint(w, output)
 }
@@ -98,7 +111,7 @@ func getReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	output := executeWithFormat("--output json --get-status %s", name)
+	output := executeWithFormat(name, "--output json --get-status %s", name)
 
 	fmt.Fprint(w, output)
 }
@@ -107,7 +120,7 @@ func deleteReplikator(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	name := vars["name"]
 
-	output := executeWithFormat("--output json --delete %s", name)
+	output := executeWithFormat(name, "--output json --delete %s", name)
 
 	fmt.Fprint(w, output)
 }
