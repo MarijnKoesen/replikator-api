@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/droundy/goopt"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
 	"net/http"
@@ -128,6 +129,7 @@ func startApiServer() {
 
 	router.Use(loggingMiddleware)
 	router.Use(jsonHeaderMiddleware)
+	router.Use(prometheusMiddleware)
 
 	log.Printf("Listening on [%s], using replikator executable [%s]\n", *listenAddress, *replikatorPath)
 
@@ -151,6 +153,16 @@ func jsonHeaderMiddleware(next http.Handler) http.Handler {
 		w.Header().Set("Content-Type", "application/json")
 
 		next.ServeHTTP(w, r)
+	})
+}
+
+func prometheusMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		route := mux.CurrentRoute(r)
+		path, _ := route.GetPathTemplate()
+		timer := prometheus.NewTimer(httpDuration.WithLabelValues(path, r.Method))
+		next.ServeHTTP(w, r)
+		timer.ObserveDuration()
 	})
 }
 
