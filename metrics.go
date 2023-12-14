@@ -12,9 +12,15 @@ import (
 var (
 	// General metrics
 	httpRequestsTotal = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "http_requests_total",
+		Name: "replikator_http_requests_total",
 		Help: "Count of all HTTP requests",
 	}, []string{"code", "method"})
+
+	httpDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "replikator_http_duration_seconds",
+		Help:    "Duration of HTTP requests.",
+		Buckets: prometheus.ExponentialBuckets(0.05, 2, 11),
+	}, []string{"path", "method"})
 
 	// Replikator/Replication metrics
 	replikatorReplicationLag = prometheus.NewGaugeVec(prometheus.GaugeOpts{
@@ -95,6 +101,7 @@ func registerMetrics() {
 	prometheus.MustRegister(
 		// General metrics
 		httpRequestsTotal,
+		httpDuration,
 
 		// Replikator/Replication metrics
 		replikatorReplicationLag,
