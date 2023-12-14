@@ -8,6 +8,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
@@ -15,6 +16,7 @@ import (
 	"strings"
 	"sync"
 	"syscall"
+	"time"
 )
 
 var mutex sync.Mutex
@@ -142,9 +144,12 @@ func startApiServer() {
 
 func loggingMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("[%s] %s %s", r.Method, r.RequestURI, r.RemoteAddr)
-
+		id := rand.Intn(99999-10000) + 10000
+		start := time.Now()
+		log.Printf("Req id=%d [%s] %s %s", id, r.Method, r.RequestURI, r.RemoteAddr)
 		next.ServeHTTP(w, r)
+		duration := time.Since(start)
+		log.Printf("Res id=%d [%s] %s %s finished in %.4f seconds", id, r.Method, r.RequestURI, r.RemoteAddr, duration.Seconds())
 	})
 }
 
